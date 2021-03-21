@@ -82,6 +82,8 @@ def check_processing_pipeline_status():
                 origin = 'GE'
             if origin == "ALGO":
                 origin = 'TARGET'
+            if origin == 'DIS':
+                origin = 'FOX'
             if origin == "JOINT-VENTURE":
                 origin = "SDS"
             
