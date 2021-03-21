@@ -36,12 +36,12 @@ clients = sorted(
 filenames = sorted(
     ["GOLDENEYE_BATCH1_CORE_COMPUTE", "GOLDENEYE_UPHE_PA042_CORE_COMPUTE", "GOLDENEYE_UPHE_PA048_CORE_COMPUTE", "GOLDENEYE_UPHE_PA045_CORE_COMPUTE",
      "GOLDENEYE_DIS_PA061_CORE_COMPUTE",
-     "GOLDENEYE_DIS_PA062_CORE_COMPUTE", "GOLDENEYE_SDS_PA033_CORE_COMPUTE", "GOLDENEYE_UPHE_PA041_CORE_COMPUTE",
+     "GOLDENEYE_DIS_PA062_CORE_COMPUTE", "GOLDENEYE_JV_PA033_CORE_COMPUTE", "GOLDENEYE_UPHE_PA041_CORE_COMPUTE",
      "GOLDENEYE_UPHE_PA044_CORE_COMPUTE", "GOLDENEYE_SPHE_PA011_CORE_COMPUTE",
-     "GOLDENEYE_SDS_PA032_CORE_COMPUTE", "GOLDENEYE_SPHE_PA012_CORE_COMPUTE", "GOLDENEYE_UPHE_PA040_CORE_COMPUTE",
-     "GOLDENEYE_SDS_PA030_CORE_COMPUTE",
+     "GOLDENEYE_JV_PA032_CORE_COMPUTE", "GOLDENEYE_SPHE_PA012_CORE_COMPUTE", "GOLDENEYE_UPHE_PA040_CORE_COMPUTE",
+     "GOLDENEYE_JV_PA030_CORE_COMPUTE",
      "GOLDENEYE_DIS_PA060_CORE_COMPUTE", "GOLDENEYE_SPHE_PA014_CORE_COMPUTE", "GOLDENEYE_SPHE_PA015_CORE_COMPUTE",
-     "GOLDENEYE_SDS_PA031_CORE_COMPUTE",
+     "GOLDENEYE_JV_PA031_CORE_COMPUTE",
      "GOLDENEYE_SPHE_PA016_CORE_COMPUTE", "GOLDENEYE_UPHE_PA043_CORE_COMPUTE", "GOLDENEYE_DIS_PA063_CORE_COMPUTE",
      "GOLDENEYE_BATCH4_CORE_COMPUTE"], reverse=True)
 core_compute_list = []
@@ -86,6 +86,11 @@ def check_processing_pipeline_status():
                 origin = 'FOX'
             if origin == "JOINT-VENTURE":
                 origin = "SDS"
+            if origin == 'DIS-EU':
+                if origin.find('PA068'):
+                    origin = 'DIS-EU'
+                if origin.find('PA069'):
+                    origin == 'DIS-GSA'
             
             current_stage = rec['stage'].split('.')
             if current_stage[0] in clients and rec['stage'] != 'algo.config':
@@ -120,7 +125,7 @@ def check_processing_pipeline_status():
                         core_compute[f_name[0]] = [object_id, rec['status'], stage]
             # else:
             #     print("file name not found for Processing Pipeline", str(rec["_id"]))
-        print("Process Queue:\n")
+        print(f"Process Queue:\n")
         if len(processing_pipeline) > 0:
             for client, stages in processing_pipeline.items():
                 total, processing_stages = 0, ""
@@ -132,7 +137,7 @@ def check_processing_pipeline_status():
                 process_queue_msg = process_queue_msg + "{:>7} : {:>4} processing ({:>5}) \n".format(client, total,
                                                                                                      processing_stages)
         else:
-            process_queue_msg = "Error \t: 0\nProcessing : 0"
+            process_queue_msg = "Processing : 0"
         print(process_queue_msg)
 
         print("\nGE Core Compute Status:\n")
@@ -180,6 +185,8 @@ def check_failed_pipeline_status():
                     origin = 'GE'
                 if origin == "ALGO":
                     origin = 'TARGET'
+                if origin == 'DIS':
+                    origin = 'FOX'
                 if origin == "JOINT-VENTURE":
                     origin = "SDS"
                 file_name = get_filename(r)
@@ -208,7 +215,7 @@ def check_failed_pipeline_status():
                         if 'complete' in list_check and 'error' in list_check:
                             double_post_message = '( Confirm Double Lambda Post )'
                             double_post_list[id] = r['created']['date']
-                            failed_pipelines = failed_pipelines + "{} - {} - Failed on - {} - {} - {} - {} - {}\n".format(origin,
+                            failed_pipelines = failed_pipelines + "{} - {} - Failed on - {} - {} - Process-ID:{} - Batch-ID:{} - {} \n\n".format(origin,
                                                                                                                      file_name,
                                                                                                                      stage,
                                                                                                                      str(
@@ -217,14 +224,14 @@ def check_failed_pipeline_status():
                                                                                                                      batch_id,
                                                                                                                      double_post_message)
                         elif 'error' in list_check:
-                            failed_pipelines = failed_pipelines + "{} - {} - Failed on - {} - {} - {} - {}\n".format(origin,
+                            failed_pipelines = failed_pipelines + "{} - {} - Failed on - {} - {} - Process-ID:{} - Batch-ID:{}\n\n".format(origin,
                                                                                                                 file_name,
                                                                                                                 stage,
                                                                                                                 str(error),
                                                                                                                 object_id,
                                                                                                                 batch_id)
                     elif str(error) != message:
-                        failed_pipelines = failed_pipelines + "{} - {} - Failed on - {} - {} - {} - {}\n".format(origin,
+                        failed_pipelines = failed_pipelines + "{} - {} - Failed on - {} - {} - Process-ID:{} - Batch-ID:{}\n\n".format(origin,
                                                                                                             file_name,
                                                                                                             stage,
                                                                                                             str(error), object_id,
@@ -268,8 +275,8 @@ schedule.every(30).minutes.do(functools.partial(message_sender, True))
 schedule.every(31).minutes.do(functools.partial(message_sender, False))
 check_processing_pipeline_status()
 check_failed_pipeline_status()
-schedule.every(300).seconds.do(check_processing_pipeline_status)
-schedule.every(302).seconds.do(check_failed_pipeline_status)
+schedule.every(120).seconds.do(check_processing_pipeline_status)
+schedule.every(120).seconds.do(check_failed_pipeline_status)
 
 while True:
     schedule.run_pending()
