@@ -31,7 +31,7 @@ processing_pipeline_query = {
 failed_pipeline_query = {
     "$and": [{"created.date": {"$gte": yest}}, {"created.date": {"$lt": tomm}}, {"$or": [{"status": "error"}]}]}
 clients = sorted(
-    ["algo", "algomus", "aec", "catad", "crosby", "dadc", "default", "dis", "excell", "fox", "goldeneye", "joint-venture" ,"jv", "penske", "sphe",
+    ["algo", "algomus", "aec", "catad", "crosby", "dadc", "default", "dis", "excell", "fox", "goldeneye", "joint-venture", "jointventure" ,"jv", "penske", "sphe",
      "uphe", "wbe", "whv-eu", "whveu", "diseu", "dis-eu", "target"], reverse=True)
 filenames = sorted(
     ["GOLDENEYE_BATCH1_CORE_COMPUTE", "GOLDENEYE_UPHE_PA042_CORE_COMPUTE", "GOLDENEYE_UPHE_PA048_CORE_COMPUTE", "GOLDENEYE_UPHE_PA045_CORE_COMPUTE",
@@ -84,13 +84,8 @@ def check_processing_pipeline_status():
                 origin = 'TARGET'
             if origin == 'DIS':
                 origin = 'FOX'
-            if origin == "JOINT-VENTURE":
+            if origin == "JOINT-VENTURE" or origin == "JOINTVENTURE":
                 origin = "SDS"
-            if origin == 'DIS-EU':
-                if origin.find('PA068'):
-                    origin = 'DIS-EU'
-                if origin.find('PA069'):
-                    origin == 'DIS-GSA'
             
             current_stage = rec['stage'].split('.')
             if current_stage[0] in clients and rec['stage'] != 'algo.config':
@@ -187,7 +182,7 @@ def check_failed_pipeline_status():
                     origin = 'TARGET'
                 if origin == 'DIS':
                     origin = 'FOX'
-                if origin == "JOINT-VENTURE":
+                if origin == "JOINT-VENTURE"  or origin == "JOINTVENTURE":
                     origin = "SDS"
                 file_name = get_filename(r)
                 if file_name:
@@ -276,7 +271,7 @@ schedule.every(31).minutes.do(functools.partial(message_sender, False))
 check_processing_pipeline_status()
 check_failed_pipeline_status()
 schedule.every(120).seconds.do(check_processing_pipeline_status)
-schedule.every(120).seconds.do(check_failed_pipeline_status)
+schedule.every(122).seconds.do(check_failed_pipeline_status)
 
 while True:
     schedule.run_pending()
